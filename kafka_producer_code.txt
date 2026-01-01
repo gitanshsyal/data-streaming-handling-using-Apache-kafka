@@ -1,0 +1,30 @@
+import json
+
+from confluent_kafka import Producer
+config = {
+        # User-specific properties that you must set
+        'bootstrap.servers': '',
+        'sasl.username':     '',
+        'sasl.password':     '',
+
+        # Fixed properties
+        'security.protocol': 'SASL_SSL',
+        'sasl.mechanisms':   'PLAIN',
+        #'acks':              'all',
+        'client.id': 'Gitansh Syal'
+    }
+producer=Producer(config)
+def acked(err,msg):
+    if err is not None:
+        print(f'Failed to deliver the message:{err}')
+    else:
+        msg_key=msg.key().decode('utf-8')
+        msg_value=msg.value().decode('utf-8')
+        print(f'Message produced:key is {msg_key} and value is {msg_value}')
+with open('C:/Users/HP/Downloads/orders_raw.json','r') as file:
+    for line in file:
+        order=json.loads(line)
+        order_id=str(order['order_id'])
+        producer.produce('Orders_raw_data',key=order_id,value=line,callback=acked)
+        producer.poll(1)
+        producer.flush()
